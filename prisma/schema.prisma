@@ -1,0 +1,303 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model order_items {
+  id                 BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  order_id           BigInt           @db.UnsignedBigInt
+  product_variant_id BigInt           @db.UnsignedBigInt
+  product_name       String           @db.VarChar(150)
+  sku                String           @db.VarChar(100)
+  weight_grams       Int              @db.UnsignedInt
+  unit_price         Decimal          @db.Decimal(12, 2)
+  quantity           Int              @db.UnsignedInt
+  subtotal           Decimal          @db.Decimal(12, 2)
+  created_at         DateTime?        @db.Timestamp(0)
+  updated_at         DateTime?        @db.Timestamp(0)
+  orders             orders           @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_order_items_order")
+  product_variants   product_variants @relation(fields: [product_variant_id], references: [id], onUpdate: NoAction, map: "fk_order_items_variant")
+  product_reviews    product_reviews?
+
+  @@index([order_id], map: "idx_order_items_order_id")
+  @@index([product_variant_id], map: "idx_order_items_variant")
+}
+
+model orders {
+  id               BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id          BigInt        @db.UnsignedBigInt
+  order_number     String        @unique(map: "uq_orders_order_number") @db.VarChar(50)
+  status           orders_status @default(pending)
+  subtotal         Decimal       @db.Decimal(12, 2)
+  shipping_cost    Decimal       @default(0.00) @db.Decimal(12, 2)
+  total_amount     Decimal       @db.Decimal(12, 2)
+  shipping_address Json
+  notes            String?       @db.Text
+  ordered_at       DateTime      @default(now()) @db.Timestamp(0)
+  created_at       DateTime?     @db.Timestamp(0)
+  updated_at       DateTime?     @db.Timestamp(0)
+  order_items      order_items[]
+  users            users         @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "fk_orders_user")
+  payments         payments[]
+  shipments        shipments?
+
+  @@index([ordered_at], map: "idx_orders_ordered_at")
+  @@index([status], map: "idx_orders_status")
+  @@index([user_id], map: "idx_orders_user_id")
+}
+
+model origins {
+  id          BigInt     @id @default(autoincrement()) @db.UnsignedBigInt
+  name        String     @db.VarChar(100)
+  region      String?    @db.VarChar(100)
+  description String?    @db.Text
+  created_at  DateTime?  @db.Timestamp(0)
+  updated_at  DateTime?  @db.Timestamp(0)
+  products    products[]
+}
+
+model payments {
+  id               BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
+  order_id         BigInt                  @db.UnsignedBigInt
+  payment_method   payments_payment_method
+  payment_provider String?                 @db.VarChar(100)
+  transaction_id   String?                 @db.VarChar(150)
+  payment_code     String?                 @db.VarChar(255)
+  checkout_url     String?                 @db.Text
+  amount           Decimal                 @db.Decimal(12, 2)
+  status           payments_status         @default(pending)
+  expires_at       DateTime?               @db.Timestamp(0)
+  paid_at          DateTime?               @db.Timestamp(0)
+  payment_response Json?
+  created_at       DateTime?               @db.Timestamp(0)
+  updated_at       DateTime?               @db.Timestamp(0)
+  orders           orders                  @relation(fields: [order_id], references: [id], onUpdate: NoAction, map: "fk_payments_order")
+
+  @@index([order_id], map: "idx_payments_order_id")
+  @@index([status], map: "idx_payments_status")
+  @@index([transaction_id], map: "idx_payments_transaction_id")
+}
+
+model product_categories {
+  id          BigInt     @id @default(autoincrement()) @db.UnsignedBigInt
+  name        String     @db.VarChar(100)
+  slug        String     @unique(map: "slug") @db.VarChar(120)
+  description String?    @db.Text
+  created_at  DateTime?  @db.Timestamp(0)
+  updated_at  DateTime?  @db.Timestamp(0)
+  products    products[]
+}
+
+model product_images {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  product_id BigInt    @db.UnsignedBigInt
+  image_path String    @db.VarChar(255)
+  is_primary Boolean   @default(false)
+  sort_order Int       @default(0)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  products   products  @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "product_images_ibfk_1")
+
+  @@index([product_id], map: "product_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model product_reviews {
+  id            BigInt       @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id       BigInt       @db.UnsignedBigInt
+  product_id    BigInt       @db.UnsignedBigInt
+  order_item_id BigInt?      @unique(map: "uq_product_reviews_order_item") @db.UnsignedBigInt
+  rating        Int          @db.UnsignedTinyInt
+  title         String?      @db.VarChar(150)
+  comment       String?      @db.Text
+  is_visible    Boolean      @default(true)
+  created_at    DateTime?    @db.Timestamp(0)
+  updated_at    DateTime?    @db.Timestamp(0)
+  order_items   order_items? @relation(fields: [order_item_id], references: [id], onUpdate: NoAction, map: "fk_product_reviews_order_item")
+  products      products     @relation(fields: [product_id], references: [id], onUpdate: NoAction, map: "fk_product_reviews_product")
+  users         users        @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "fk_product_reviews_user")
+
+  @@unique([user_id, product_id], map: "uq_product_reviews_user_product")
+  @@index([product_id], map: "idx_product_reviews_product_id")
+  @@index([user_id], map: "idx_product_reviews_user_id")
+}
+
+model product_variants {
+  id              BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  product_id      BigInt            @db.UnsignedBigInt
+  sku             String            @unique(map: "uq_product_variants_sku") @db.VarChar(100)
+  weight_grams    Int               @db.UnsignedInt
+  price           Decimal           @db.Decimal(12, 2)
+  stock           Int               @default(0) @db.UnsignedInt
+  is_active       Boolean           @default(true)
+  created_at      DateTime?         @db.Timestamp(0)
+  updated_at      DateTime?         @db.Timestamp(0)
+  order_items     order_items[]
+  products        products          @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_product_variants_product")
+  stock_movements stock_movements[]
+
+  @@unique([product_id, weight_grams], map: "uq_product_variants_weight")
+  @@index([product_id], map: "idx_product_variants_product_id")
+}
+
+model products {
+  id                 BigInt                @id @default(autoincrement()) @db.UnsignedBigInt
+  category_id        BigInt?               @db.UnsignedBigInt
+  origin_id          BigInt?               @db.UnsignedBigInt
+  name               String                @db.VarChar(150)
+  slug               String                @unique(map: "slug") @db.VarChar(180)
+  description        String?               @db.Text
+  coffee_type        products_coffee_type
+  product_type       products_product_type
+  cultivar           String?               @db.VarChar(100)
+  processing_method  String?               @db.VarChar(100)
+  tasting_notes      String?               @db.Text
+  altitude_min       Int?                  @db.UnsignedInt
+  altitude_max       Int?                  @db.UnsignedInt
+  roast_level        products_roast_level
+  is_active          Boolean               @default(true)
+  created_at         DateTime?             @db.Timestamp(0)
+  updated_at         DateTime?             @db.Timestamp(0)
+  product_images     product_images[]
+  product_reviews    product_reviews[]
+  product_variants   product_variants[]
+  product_categories product_categories?   @relation(fields: [category_id], references: [id], onUpdate: NoAction, map: "fk_products_category")
+  origins            origins?              @relation(fields: [origin_id], references: [id], onUpdate: NoAction, map: "fk_products_origin")
+
+  @@index([category_id], map: "fk_products_category")
+  @@index([origin_id], map: "fk_products_origin")
+}
+
+model shipments {
+  id                 BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  order_id           BigInt           @unique(map: "uq_shipments_order_id") @db.UnsignedBigInt
+  courier_name       String           @db.VarChar(100)
+  courier_service    String?          @db.VarChar(100)
+  tracking_number    String?          @db.VarChar(150)
+  tracking_url       String?          @db.Text
+  shipping_label_url String?          @db.Text
+  shipping_cost      Decimal          @default(0.00) @db.Decimal(12, 2)
+  status             shipments_status @default(pending)
+  shipped_at         DateTime?        @db.Timestamp(0)
+  delivered_at       DateTime?        @db.Timestamp(0)
+  shipping_response  Json?
+  created_at         DateTime?        @db.Timestamp(0)
+  updated_at         DateTime?        @db.Timestamp(0)
+  orders             orders           @relation(fields: [order_id], references: [id], onUpdate: NoAction, map: "fk_shipments_order")
+
+  @@index([status], map: "idx_shipments_status")
+  @@index([tracking_number], map: "idx_shipments_tracking_number")
+}
+
+model stock_movements {
+  id                 BigInt                        @id @default(autoincrement()) @db.UnsignedBigInt
+  product_variant_id BigInt                        @db.UnsignedBigInt
+  movement_type      stock_movements_movement_type
+  quantity           Int
+  stock_before       Int                           @db.UnsignedInt
+  stock_after        Int                           @db.UnsignedInt
+  description        String?                       @db.VarChar(255)
+  created_at         DateTime?                     @db.Timestamp(0)
+  product_variants   product_variants              @relation(fields: [product_variant_id], references: [id], onUpdate: NoAction, map: "fk_stock_movements_variant")
+
+  @@index([product_variant_id], map: "idx_stock_movements_variant")
+}
+
+model user_addresses {
+  id              BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id         BigInt    @db.UnsignedBigInt
+  label           String    @db.VarChar(50)
+  recipient_name  String    @db.VarChar(150)
+  recipient_phone String    @db.VarChar(20)
+  address         String    @db.Text
+  city            String    @db.VarChar(100)
+  province        String    @db.VarChar(100)
+  postal_code     String    @db.VarChar(10)
+  is_default      Boolean   @default(false)
+  created_at      DateTime? @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
+  users           users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_addresses_user")
+
+  @@index([user_id], map: "fk_user_addresses_user")
+}
+
+model users {
+  id                BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  name              String            @db.VarChar(150)
+  email             String            @unique(map: "email") @db.VarChar(150)
+  phone             String?           @db.VarChar(20)
+  password          String            @db.VarChar(255)
+  role              users_role        @default(customer)
+  email_verified_at DateTime?         @db.Timestamp(0)
+  remember_token    String?           @db.VarChar(100)
+  created_at        DateTime?         @db.Timestamp(0)
+  updated_at        DateTime?         @db.Timestamp(0)
+  orders            orders[]
+  product_reviews   product_reviews[]
+  user_addresses    user_addresses[]
+}
+
+enum payments_payment_method {
+  qris
+  virtual_account
+  e_wallet
+}
+
+enum stock_movements_movement_type {
+  in
+  out
+  adjustment
+}
+
+enum orders_status {
+  pending
+  processing
+  shipped
+  delivered
+  cancelled
+}
+
+enum users_role {
+  admin
+  customer
+}
+
+enum products_coffee_type {
+  arabica
+  robusta
+  liberica
+  blend
+}
+
+enum products_product_type {
+  single_origin
+  house_blend
+}
+
+enum payments_status {
+  pending
+  paid
+  failed
+  expired
+  refunded
+}
+
+enum shipments_status {
+  pending
+  processing
+  shipped
+  in_transit
+  delivered
+  failed
+  returned
+}
+
+enum products_roast_level {
+  light
+  medium
+  dark
+}
