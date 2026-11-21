@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kopi Karsa ☕
 
-## Getting Started
+Point of Sale (POS) and Management System for Coffee Shops, built with **Next.js**, **Prisma ORM**, and **MariaDB / MySQL**.
 
-First, run the development server:
+---
 
+## 🚀 How to Clone and Run
+
+You can run this project in two ways:
+1. **Local Setup (Standard)**: Run MySQL locally (e.g. XAMPP, Laragon, or native MySQL) and Next.js on your machine.
+2. **Docker Setup (Zero-config)**: Run everything (or just the database) inside Docker containers.
+
+---
+
+### Option 1: Local Setup (Recommended for Development)
+
+#### 1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/btngs/kopi-karsa.git
+cd kopi-karsa
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+#### 2. Install dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+#### 3. Setup environment variables
+Copy the example environment file:
+```bash
+# On Linux/macOS
+cp .env.example .env
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# On Windows PowerShell
+Copy-Item .env.example .env
+```
+Open `.env` and adjust your MySQL credentials:
+```env
+DATABASE_URL="mysql://root:your_password@localhost:3306/kopi_karsa"
+DB_HOST="localhost"
+DB_PORT="3306"
+DB_USER="root"
+DB_PASSWORD="your_password"
+DB_NAME="kopi_karsa"
+```
 
-## Learn More
+#### 4. Prepare the database
+Make sure your local MySQL/MariaDB service is running, then create the database if it doesn't exist yet:
+```sql
+CREATE DATABASE IF NOT EXISTS kopi_karsa;
+```
 
-To learn more about Next.js, take a look at the following resources:
+Push the Prisma schema to create all tables:
+```bash
+npx prisma db push
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+#### 5. Run the dev server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser!
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+### Option 2: Docker Setup
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+If you don't want to install or run MySQL directly on your laptop, Docker makes it super easy.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+#### A. Full Stack with Docker (App + Database)
+Just make sure Docker Desktop is open and run:
+```bash
+# 1. Create .env file
+Copy-Item .env.example .env
+
+# 2. Build and spin up the containers
+docker compose up --build -d
+
+# 3. Push database schema
+docker compose exec app npx prisma db push
+```
+Open [http://localhost:3000](http://localhost:3000) and you're good to go!
+
+#### B. Only Database in Docker (Next.js run locally)
+If you just want the database in Docker and prefer running `npm run dev` locally:
+```bash
+# Start MariaDB container on port 3307
+docker compose up db -d
+
+# Sync Prisma schema
+npx prisma db push
+
+# Start Next.js
+npm run dev
+```
+
+---
+
+## 🗄️ Database Inspection
+
+You can inspect and manage your data easily using **Prisma Studio**:
+```bash
+npx prisma studio
+```
+Then visit [http://localhost:5555](http://localhost:5555).
+
+Alternatively, connect via your favorite database GUI (DBeaver, TablePlus, HeidiSQL, etc.):
+- **Host**: `localhost`
+- **Port**: `3306` (Local MySQL) or `3307` (Docker mapped port)
+- **User**: `root`
+- **Database**: `kopi_karsa`
+
+---
+
+## 🛠️ Tech Stack
+- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Database ORM**: [Prisma](https://www.prisma.io/)
+- **Database**: MariaDB / MySQL
+- **Containerization**: Docker & Docker Compose
