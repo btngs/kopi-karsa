@@ -1,120 +1,120 @@
-# Kopi Karsa ☕
+# Kopi Karsa
 
-Point of Sale (POS) and Management System for Coffee Shops, built with **Next.js**, **Prisma ORM**, and **MariaDB / MySQL**.
-
----
-
-## 🚀 How to Clone and Run
-
-You can run this project in two ways:
-1. **Local Setup (Standard)**: Run MySQL locally (e.g. XAMPP, Laragon, or native MySQL) and Next.js on your machine.
-2. **Docker Setup (Zero-config)**: Run everything (or just the database) inside Docker containers.
+Sistem Manajemen dan Kasir (Point of Sale / POS) untuk kedai kopi, dibangun menggunakan **Next.js**, **Prisma ORM**, dan **MariaDB / MySQL**.
 
 ---
 
-### Option 1: Local Setup (Recommended for Development)
+## Panduan Clone dan Menjalankan Project
 
-#### 1. Clone the repository
+Project ini dapat dijalankan dengan 2 cara:
+1. **Setup Lokal (Standar)**: Menjalankan MySQL secara lokal (XAMPP, Laragon, atau MySQL bawaan Windows) dan menjalankan Next.js di laptop Anda.
+2. **Setup Docker**: Menjalankan seluruh aplikasi beserta database (atau hanya databasenya saja) di dalam container Docker.
+
+---
+
+### Opsi 1: Setup Lokal (Direkomendasikan untuk Pengembangan)
+
+#### 1. Clone repository
 ```bash
 git clone https://github.com/btngs/kopi-karsa.git
 cd kopi-karsa
 ```
 
-#### 2. Install dependencies
+#### 2. Install dependency
 ```bash
 npm install
 ```
 
-#### 3. Setup environment variables
-Copy the example environment file:
+#### 3. Konfigurasi file environment
+Salin file template environment:
 ```bash
-# On Linux/macOS
+# Untuk Linux / macOS
 cp .env.example .env
 
-# On Windows PowerShell
+# Untuk Windows PowerShell
 Copy-Item .env.example .env
 ```
-Open `.env` and adjust your MySQL credentials:
+Buka file `.env` dan sesuaikan kredensial MySQL lokal Anda:
 ```env
-DATABASE_URL="mysql://root:your_password@localhost:3306/kopi_karsa"
+DATABASE_URL="mysql://root:password_anda@localhost:3306/kopi_karsa"
 DB_HOST="localhost"
 DB_PORT="3306"
 DB_USER="root"
-DB_PASSWORD="your_password"
+DB_PASSWORD="password_anda"
 DB_NAME="kopi_karsa"
 ```
 
-#### 4. Prepare the database
-Make sure your local MySQL/MariaDB service is running, then create the database if it doesn't exist yet:
+#### 4. Siapkan database
+Pastikan service MySQL / MariaDB lokal Anda sudah aktif, lalu buat databasenya jika belum tersedia:
 ```sql
 CREATE DATABASE IF NOT EXISTS kopi_karsa;
 ```
 
-Push the Prisma schema to create all tables:
+Jalankan push skema Prisma untuk membuat semua tabel:
 ```bash
 npx prisma db push
 ```
 
-#### 5. Run the dev server
+#### 5. Jalankan server pengembangan
 ```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser!
+Buka browser di [http://localhost:3000](http://localhost:3000).
 
 ---
 
-### Option 2: Docker Setup
+### Opsi 2: Setup Menggunakan Docker
 
-If you don't want to install or run MySQL directly on your laptop, Docker makes it super easy.
+Gunakan opsi ini jika Anda tidak ingin menginstal atau mengaktifkan MySQL manual di laptop Anda.
 
-#### A. Full Stack with Docker (App + Database)
-Just make sure Docker Desktop is open and run:
+#### A. Full Stack dengan Docker (Aplikasi + Database)
+Pastikan Docker Desktop sudah dibuka dan aktif, lalu jalankan:
 ```bash
-# 1. Create .env file
+# 1. Salin template environment
 Copy-Item .env.example .env
 
-# 2. Build and spin up the containers
+# 2. Build dan jalankan seluruh container
 docker compose up --build -d
 
-# 3. Push database schema
+# 3. Sinkronkan skema tabel database
 docker compose exec app npx prisma db push
 ```
-Open [http://localhost:3000](http://localhost:3000) and you're good to go!
+Aplikasi langsung dapat diakses di [http://localhost:3000](http://localhost:3000).
 
-#### B. Only Database in Docker (Next.js run locally)
-If you just want the database in Docker and prefer running `npm run dev` locally:
+#### B. Hanya Database di Docker (Next.js Dijalankan Lokal)
+Jika hanya ingin databasenya yang berjalan di Docker sementara Next.js dijalankan lewat `npm run dev`:
 ```bash
-# Start MariaDB container on port 3307
+# Jalankan container MariaDB pada port 3307
 docker compose up db -d
 
-# Sync Prisma schema
+# Sinkronkan skema Prisma
 npx prisma db push
 
-# Start Next.js
+# Jalankan Next.js
 npm run dev
 ```
 
 ---
 
-## 🗄️ Database Inspection
+## Mengakses dan Mengelola Database
 
-You can inspect and manage your data easily using **Prisma Studio**:
+Anda dapat melihat serta mengedit isi database secara visual melalui **Prisma Studio**:
 ```bash
 npx prisma studio
 ```
-Then visit [http://localhost:5555](http://localhost:5555).
+Lalu buka browser di [http://localhost:5555](http://localhost:5555).
 
-Alternatively, connect via your favorite database GUI (DBeaver, TablePlus, HeidiSQL, etc.):
+Atau hubungkan melalui aplikasi database GUI favorit Anda (DBeaver, TablePlus, HeidiSQL, phpMyAdmin, dll.):
 - **Host**: `localhost`
-- **Port**: `3306` (Local MySQL) or `3307` (Docker mapped port)
+- **Port**: `3306` (MySQL lokal) atau `3307` (Port container Docker)
 - **User**: `root`
 - **Database**: `kopi_karsa`
 
 ---
 
-## 🛠️ Tech Stack
+## Teknologi yang Digunakan
 - **Framework**: [Next.js](https://nextjs.org/) (App Router)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Database ORM**: [Prisma](https://www.prisma.io/)
 - **Database**: MariaDB / MySQL
-- **Containerization**: Docker & Docker Compose
+- **Kontainerisasi**: Docker & Docker Compose
